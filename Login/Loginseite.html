@@ -81,7 +81,7 @@
       loginBtn.textContent = "Bitte warten...";
 
       try {
-        const res = await fetch("data/Mitglieder.json"); // Pfad zur JSON-Datei anpassen
+        const res = await fetch("Account/Mitglieder.json"); // Pfad zur JSON-Datei anpassen
         if (!res.ok) throw new Error("Fehler beim Laden der JSON-Datei");
         const users = await res.json();
 
