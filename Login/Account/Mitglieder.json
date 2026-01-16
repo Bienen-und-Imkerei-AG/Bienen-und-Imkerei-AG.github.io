@@ -1,5 +1,5 @@
 [
   { "username": "max", "password": "1234", "rang": "Mitglied", "name": "Max Mustermann" },
-  { "username": "anna", "password": "abcd", "rang": "Admin", "name": "Anna Admin" },
-  { "username": "chef", "password": "chefpass", "rang": "Chef", "name": "Der Chef" }
+  { "username": "anna", "password": "abcd", "rang": "Admin", "name": "Anna Admin" }
 ]
+
