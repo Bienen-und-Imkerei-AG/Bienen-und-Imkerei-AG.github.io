@@ -50,45 +50,49 @@
   </div>
 
   <script>
-async function login() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const status = document.getElementById("status");
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const status = document.getElementById("status");
 
-  if (!username || !password) {
-    status.textContent = "Bitte alle Felder ausfüllen.";
-    status.className = "error";
-    return;
-  }
+      if (!username || !password) {
+        status.textContent = "Bitte alle Felder ausfüllen.";
+        status.className = "error";
+        return;
+      }
 
-  try {
-    // fetch die JSON-Datei aus deinem Ordner
-    const res = await fetch("Account/Mitglieder.json"); // passe den Pfad an
-    const users = await res.json();
+      try {
+        // Pfad zur JSON-Datei anpassen, z.B. "data/Mitglieder.json"
+        const res = await fetch("data/Mitglieder.json");
+        if (!res.ok) throw new Error("Fehler beim Laden der JSON-Datei");
+        const users = await res.json();
 
-    // Suche nach Benutzer
-    const user = users.find(u => u.username === username && u.password === password);
+        // Benutzer suchen (case-insensitive für den Username)
+        const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
 
-    if (user) {
-      status.textContent = `Willkommen, ${user.name}! (Rang: ${user.rang})`;
-      status.className = "success";
-      localStorage.setItem("user", JSON.stringify(user));
+        if (user) {
+          status.textContent = `Willkommen, ${user.name}! (Rang: ${user.rang})`;
+          status.className = "success";
 
-      // Weiterleitung nach Rang
-      setTimeout(() => {
-        const pages = { Mitglied: "Account/Mitglied.html", Admin: "Account/Admin.html", Chef: "Account/Chef.html" };
-        window.location.href = pages[user.rang];
-      }, 1000);
-    } else {
-      status.textContent = "❌ Login fehlgeschlagen.";
-      status.className = "error";
+          // Speichern optional
+          localStorage.setItem("user", JSON.stringify(user));
+
+          // Weiterleitung nach Rang
+          setTimeout(() => {
+            const pages = { Mitglied: "Mitglied.html", Admin: "Admin.html", Chef: "Chef.html" };
+            if (pages[user.rang]) window.location.href = pages[user.rang];
+          }, 1000);
+        } else {
+          status.textContent = "❌ Login fehlgeschlagen.";
+          status.className = "error";
+        }
+
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Fehler beim Laden der Benutzerdatei.";
+        status.className = "error";
+      }
     }
-  } catch (err) {
-    console.error(err);
-    status.textContent = "Datei nicht gefunden oder Fehler beim Laden.";
-    status.className = "error";
-  }
-}
-</script>
+  </script>
 </body>
 </html>
