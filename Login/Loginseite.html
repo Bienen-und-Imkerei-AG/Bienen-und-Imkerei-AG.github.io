@@ -96,9 +96,23 @@
           localStorage.setItem("user", JSON.stringify(user));
 
           setTimeout(() => {
-            const pages = { Mitglied: "Account/Mitglied.html", Admin: "Account/Admin.html", Chef: "Account/Chef.html" };
-            if (pages[user.rang]) window.location.href = pages[user.rang];
-          }, 1000);
+  // Wir definieren die Keys hier kleingeschrieben
+  const pages = { 
+    mitglied: "Account/Mitglied.html", 
+    admin: "Account/Admin.html", 
+    chef: "Account/Chef.html" 
+  };
+
+  // Wir wandeln den Rang des Users in Kleimbuchstaben um
+  const userRang = user.rang.toLowerCase(); 
+
+  if (pages[userRang]) {
+    window.location.href = pages[userRang];
+  } else {
+    console.error("Keine Seite für Rang gefunden:", userRang);
+    status.textContent = "Fehler: Dein Rang ist nicht zugelassen.";
+  }
+}, 1000);
         } else {
           status.textContent = "❌ Login fehlgeschlagen.";
           status.className = "error";
