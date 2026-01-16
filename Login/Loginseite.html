@@ -50,55 +50,45 @@
   </div>
 
   <script>
-    async function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const status = document.getElementById("status");
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const status = document.getElementById("status");
 
-      if (!username || !password) {
-        status.textContent = "Bitte alle Felder ausfüllen.";
-        status.className = "error";
-        return;
-      }
+  if (!username || !password) {
+    status.textContent = "Bitte alle Felder ausfüllen.";
+    status.className = "error";
+    return;
+  }
 
-      try {
-        // Anfrage an dein Backend-API
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
+  try {
+    // fetch die JSON-Datei aus deinem Ordner
+    const res = await fetch("Account/Mitglieder.json"); // passe den Pfad an
+    const users = await res.json();
 
-        const data = await res.json();
+    // Suche nach Benutzer
+    const user = users.find(u => u.username === username && u.password === password);
 
-        if (data.success) {
-          status.textContent = `Willkommen, ${data.name}! (Rang: ${data.rang})`;
-          status.className = "success";
+    if (user) {
+      status.textContent = `Willkommen, ${user.name}! (Rang: ${user.rang})`;
+      status.className = "success";
+      localStorage.setItem("user", JSON.stringify(user));
 
-          // Benutzerinfo speichern (optional)
-          localStorage.setItem("user", JSON.stringify(data));
-
-          // Weiterleitung je nach Rang
-          setTimeout(() => {
-            switch (data.rang) {
-              case "Mitglied":
-                window.location.href = "Mitglied.html"; break;
-              case "Admin":
-                window.location.href = "Admin.html"; break;
-              case "Chef":
-                window.location.href = "Chef.html"; break;
-            }
-          }, 1000);
-        } else {
-          status.textContent = data.message || "❌ Login fehlgeschlagen.";
-          status.className = "error";
-        }
-      } catch (err) {
-        console.error(err);
-        status.textContent = "Server nicht erreichbar.";
-        status.className = "error";
-      }
+      // Weiterleitung nach Rang
+      setTimeout(() => {
+        const pages = { Mitglied: "Mitglied.html", Admin: "Admin.html", Chef: "Chef.html" };
+        window.location.href = pages[user.rang];
+      }, 1000);
+    } else {
+      status.textContent = "❌ Login fehlgeschlagen.";
+      status.className = "error";
     }
-  </script>
+  } catch (err) {
+    console.error(err);
+    status.textContent = "Datei nicht gefunden oder Fehler beim Laden.";
+    status.className = "error";
+  }
+}
+</script>
 </body>
 </html>
