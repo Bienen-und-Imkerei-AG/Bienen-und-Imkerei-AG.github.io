@@ -76,7 +76,7 @@ async function login() {
 
       // Weiterleitung nach Rang
       setTimeout(() => {
-        const pages = { Mitglied: "Mitglied.html", Admin: "Admin.html", Chef: "Chef.html" };
+        const pages = { Mitglied: "Account/Mitglied.html", Admin: "Account/Admin.html", Chef: "Account/Chef.html" };
         window.location.href = pages[user.rang];
       }, 1000);
     } else {
