@@ -1,5 +1,14 @@
 [
-  { "username": "max", "password": "1234", "rang": "Mitglied", "name": "Max Mustermann" },
-  { "username": "anna", "password": "abcd", "rang": "Admin", "name": "Anna Admin" }
+  {
+    "username": "MaxMustermann",
+    "password": "geheim123",
+    "name": "Max",
+    "rang": "Mitglied"
+  },
+  {
+    "username": "AdminUser",
+    "password": "admin-password",
+    "name": "Administrator",
+    "rang": "Admin"
+  }
 ]
-
