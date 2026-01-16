@@ -1,14 +1,8 @@
 [
   {
-    "username": "MaxMustermann",
-    "password": "geheim123",
-    "name": "Max",
+    "username": "TestUser",
+    "password": "123",
+    "name": "Test Name",
     "rang": "Mitglied"
-  },
-  {
-    "username": "AdminUser",
-    "password": "admin-password",
-    "name": "Administrator",
-    "rang": "Admin"
   }
 ]
