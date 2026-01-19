@@ -5,4 +5,10 @@
     "name": "Test Name",
     "rang": "Mitglied"
   }
+  {
+    "username": "Birte Lehnen",
+    "password": "1234",
+    "name": "Birte Lehnen",
+    "rang": "Admin"
+  }
 ]
