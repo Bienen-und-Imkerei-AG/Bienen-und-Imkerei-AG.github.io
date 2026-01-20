@@ -109,18 +109,19 @@ function senden() {
         "Gesamtpreis: " + total.toFixed(2) + " €";
 
     fetch("https://script.google.com/macros/s/AKfycbxgXbr8wq_42gzd4KQe_JTjC-gPvxW7MkLanQ10MgZJkxkJVfzKknSHXK3N-XszvHAS/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, total })
-    })
-    .then(() => {
-        meldung.innerText = "✅ Bestellung wurde erfolgreich abgesendet!";
-        meldung.className = "success";
-    })
-    .catch(() => {
-        meldung.innerText = "❌ Fehler beim Absenden der Bestellung.";
-        meldung.className = "error";
-    });
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items, total })
+})
+.then(() => {
+    meldung.innerText = "✅ Bestellung wurde erfolgreich abgesendet!";
+    meldung.className = "success";
+})
+.catch(() => {
+    meldung.innerText = "❌ Fehler beim Absenden der Bestellung.";
+    meldung.className = "error";
+});
 }
 </script>
 
