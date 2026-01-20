@@ -82,7 +82,7 @@ function senden() {
   add("Sternenlicht", 1.5, "stern");
   add("Bienenwachs-Lavendel Handcreme", 2, "creme");
 
-  fetch("DEINE_WEBAPP_URL_HIER", {
+  fetch("https://script.google.com/macros/s/AKfycbxgXbr8wq_42gzd4KQe_JTjC-gPvxW7MkLanQ10MgZJkxkJVfzKknSHXK3N-XszvHAS/exec", {
     method: "POST",
     body: JSON.stringify({ items })
   })
