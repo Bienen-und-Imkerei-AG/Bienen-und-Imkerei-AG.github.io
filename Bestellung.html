@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bestellung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border-bottom: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .info {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Bestellung</h1>
+
+<table>
+    <tr>
+        <th>Artikel</th>
+        <th>Preis (€)</th>
+        <th>Menge</th>
+    </tr>
+
+    <tr><td>Honig</td><td>7,00</td><td><input type="number" min="0" id="honig"></td></tr>
+    <tr><td>Kleine Rollkerze</td><td>1,50</td><td><input type="number" min="0" id="roll_klein"></td></tr>
+    <tr><td>Große Rollkerze</td><td>2,50</td><td><input type="number" min="0" id="roll_gross"></td></tr>
+    <tr><td>Gusskerzenfigur klein</td><td>2,50</td><td><input type="number" min="0" id="guss_klein"></td></tr>
+    <tr><td>Gusskerzenfigur groß</td><td>3,50</td><td><input type="number" min="0" id="guss_gross"></td></tr>
+    <tr><td>Teelicht</td><td>1,00</td><td><input type="number" min="0" id="teelicht"></td></tr>
+    <tr><td>Sternenlicht</td><td>1,50</td><td><input type="number" min="0" id="stern"></td></tr>
+    <tr><td>Bienenwachs-Lavendel Handcreme</td><td>2,00</td><td><input type="number" min="0" id="creme"></td></tr>
+</table>
+
+<button onclick="bestellen()">Bestellung erstellen</button>
+
+<p id="gesamtpreis"></p>
+
+<div class="info">
+    Abholung am nächsten Freitag im Raum <strong>NW100 der GED</strong><br>
+    Bezahlung bei Abholung
+</div>
+
+<script>
+function bestellen() {
+    const artikel = [
+        ["Honig", 7.00, document.getElementById("honig").value],
+        ["Kleine Rollkerze", 1.50, document.getElementById("roll_klein").value],
+        ["Große Rollkerze", 2.50, document.getElementById("roll_gross").value],
+        ["Gusskerzenfigur klein", 2.50, document.getElementById("guss_klein").value],
+        ["Gusskerzenfigur groß", 3.50, document.getElementById("guss_gross").value],
+        ["Teelicht", 1.00, document.getElementById("teelicht").value],
+        ["Sternenlicht", 1.50, document.getElementById("stern").value],
+        ["Bienenwachs-Lavendel Handcreme", 2.00, document.getElementById("creme").value]
+    ];
+
+    let gesamt = 0;
+    let text = "Bestellung\n\n";
+
+    artikel.forEach(a => {
+        const menge = parseInt(a[2]) || 0;
+        if (menge > 0) {
+            const preis = a[1] * menge;
+            gesamt += preis;
+            text += `${a[0]}: ${menge} x ${a[1].toFixed(2)} € = ${preis.toFixed(2)} €\n`;
+        }
+    });
+
+    text += `\nGesamtpreis: ${gesamt.toFixed(2)} €\n`;
+    text += "\nAbholung am nächsten Freitag im Raum NW100 der GED\n";
+    text += "Bezahlung bei Abholung\n";
+
+    document.getElementById("gesamtpreis").innerText =
+        "Gesamtpreis: " + gesamt.toFixed(2) + " €";
+
+    const jetzt = new Date();
+    const datum = jetzt.toISOString().replace(/[:]/g, "-").split(".")[0];
+    const dateiname = `Bestellung_${datum}.txt`;
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = dateiname;
+    link.click();
+}
+</script>
+
+</body>
+</html>
