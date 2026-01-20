@@ -30,6 +30,16 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        .success {
+            margin-top: 15px;
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            margin-top: 15px;
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -43,19 +53,20 @@
         <th>Menge</th>
     </tr>
 
-    <tr><td>Honig</td><td>7,00</td><td><input type="number" min="0" id="honig"></td></tr>
-    <tr><td>Kleine Rollkerze</td><td>1,50</td><td><input type="number" min="0" id="roll_klein"></td></tr>
-    <tr><td>Große Rollkerze</td><td>2,50</td><td><input type="number" min="0" id="roll_gross"></td></tr>
-    <tr><td>Gusskerzenfigur klein</td><td>2,50</td><td><input type="number" min="0" id="guss_klein"></td></tr>
-    <tr><td>Gusskerzenfigur groß</td><td>3,50</td><td><input type="number" min="0" id="guss_gross"></td></tr>
-    <tr><td>Teelicht</td><td>1,00</td><td><input type="number" min="0" id="teelicht"></td></tr>
-    <tr><td>Sternenlicht</td><td>1,50</td><td><input type="number" min="0" id="stern"></td></tr>
-    <tr><td>Bienenwachs-Lavendel Handcreme</td><td>2,00</td><td><input type="number" min="0" id="creme"></td></tr>
+    <tr><td>Honig</td><td>7,00</td><td><input type="number" min="0" value="0" id="honig"></td></tr>
+    <tr><td>Kleine Rollkerze</td><td>1,50</td><td><input type="number" min="0" value="0" id="roll_klein"></td></tr>
+    <tr><td>Große Rollkerze</td><td>2,50</td><td><input type="number" min="0" value="0" id="roll_gross"></td></tr>
+    <tr><td>Gusskerzenfigur klein</td><td>2,50</td><td><input type="number" min="0" value="0" id="guss_klein"></td></tr>
+    <tr><td>Gusskerzenfigur groß</td><td>3,50</td><td><input type="number" min="0" value="0" id="guss_gross"></td></tr>
+    <tr><td>Teelicht</td><td>1,00</td><td><input type="number" min="0" value="0" id="teelicht"></td></tr>
+    <tr><td>Sternenlicht</td><td>1,50</td><td><input type="number" min="0" value="0" id="stern"></td></tr>
+    <tr><td>Bienenwachs-Lavendel Handcreme</td><td>2,00</td><td><input type="number" min="0" value="0" id="creme"></td></tr>
 </table>
 
-<button onclick="senden()">Bestellung erstellen</button>
+<button onclick="senden()">Bestellung absenden</button>
 
 <p id="gesamtpreis"></p>
+<p id="meldung"></p>
 
 <div class="info">
     Abholung am nächsten Freitag im Raum <strong>NW100 der GED</strong><br>
@@ -64,29 +75,52 @@
 
 <script>
 function senden() {
-  const items = [];
+    const items = [];
+    let total = 0;
 
-  function add(name, price, id) {
-    const amount = parseInt(document.getElementById(id).value) || 0;
-    if (amount > 0) {
-      items.push({ name, price, amount });
+    const meldung = document.getElementById("meldung");
+    meldung.innerText = "";
+    meldung.className = "";
+
+    function add(name, price, id) {
+        const amount = parseInt(document.getElementById(id).value) || 0;
+        if (amount > 0) {
+            items.push({ name, price, amount });
+            total += price * amount;
+        }
     }
-  }
 
-  add("Honig", 7, "honig");
-  add("Kleine Rollkerze", 1.5, "roll_klein");
-  add("Große Rollkerze", 2.5, "roll_gross");
-  add("Gusskerzenfigur klein", 2.5, "guss_klein");
-  add("Gusskerzenfigur groß", 3.5, "guss_gross");
-  add("Teelicht", 1, "teelicht");
-  add("Sternenlicht", 1.5, "stern");
-  add("Bienenwachs-Lavendel Handcreme", 2, "creme");
+    add("Honig", 7, "honig");
+    add("Kleine Rollkerze", 1.5, "roll_klein");
+    add("Große Rollkerze", 2.5, "roll_gross");
+    add("Gusskerzenfigur klein", 2.5, "guss_klein");
+    add("Gusskerzenfigur groß", 3.5, "guss_gross");
+    add("Teelicht", 1, "teelicht");
+    add("Sternenlicht", 1.5, "stern");
+    add("Bienenwachs-Lavendel Handcreme", 2, "creme");
 
-  fetch("https://script.google.com/macros/s/AKfycbxgXbr8wq_42gzd4KQe_JTjC-gPvxW7MkLanQ10MgZJkxkJVfzKknSHXK3N-XszvHAS/exec", {
-    method: "POST",
-    body: JSON.stringify({ items })
-  })
-  .then(() => alert("Bestellung gespeichert!"));
+    if (items.length === 0) {
+        meldung.innerText = "❌ Bitte mindestens einen Artikel auswählen.";
+        meldung.className = "error";
+        return;
+    }
+
+    document.getElementById("gesamtpreis").innerText =
+        "Gesamtpreis: " + total.toFixed(2) + " €";
+
+    fetch("https://script.google.com/macros/s/AKfycbxgXbr8wq_42gzd4KQe_JTjC-gPvxW7MkLanQ10MgZJkxkJVfzKknSHXK3N-XszvHAS/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, total })
+    })
+    .then(() => {
+        meldung.innerText = "✅ Bestellung wurde erfolgreich abgesendet!";
+        meldung.className = "success";
+    })
+    .catch(() => {
+        meldung.innerText = "❌ Fehler beim Absenden der Bestellung.";
+        meldung.className = "error";
+    });
 }
 </script>
 
