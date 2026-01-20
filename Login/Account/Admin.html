@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Bestellübersicht</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  max-width: 900px;
+  margin: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+}
+th {
+  background: #f0f0f0;
+}
+button {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.total {
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h1>📦 Bestellübersicht</h1>
+
+<table id="table">
+  <thead>
+    <tr>
+      <th>Datum</th>
+      <th>Artikel</th>
+      <th>Menge</th>
+      <th>Preis (€)</th>
+      <th>Gesamt (€)</th>
+      <th>Aktion</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<p class="total" id="summe"></p>
+
+<script>
+function loadData() {
+  fetch("?action=list")
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("tbody");
+      tbody.innerHTML = "";
+      let sum = 0;
+
+      data.forEach(item => {
+        sum += item.total;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(item.date).toLocaleString()}</td>
+          <td>${item.name}</td>
+          <td>${item.amount}</td>
+          <td>${item.price.toFixed(2)}</td>
+          <td>${item.total.toFixed(2)}</td>
+          <td>
+            <button onclick="del(${item.rowNumber})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("summe").innerText =
+        "Gesamtsumme: " + sum.toFixed(2) + " €";
+    });
+}
+
+function del(row) {
+  if (!confirm("Eintrag wirklich löschen?")) return;
+
+  google.script.run
+    .withSuccessHandler(loadData)
+    .deleteRow(row);
+}
+
+loadData();
+</script>
+
+</body>
+</html>
