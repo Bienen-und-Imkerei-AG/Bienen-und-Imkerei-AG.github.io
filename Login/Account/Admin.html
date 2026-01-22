@@ -27,7 +27,7 @@ button {
 </head>
 <body>
 
-<h1>📦 Bestellungen.</h1>
+<h1>📦 Bestellungen..</h1>
 
 <table>
 <thead>
@@ -47,30 +47,37 @@ button {
 
 <script>
 function load() {
-  google.script.run.withSuccessHandler(data => {
-    const tbody = document.getElementById("rows");
-    tbody.innerHTML = "";
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "<tr><td colspan='6'>Lade Bestellungen...</td></tr>";
 
-    let sum = 0;
+  google.script.run
+    .withSuccessHandler(data => {
+      tbody.innerHTML = "";
+      let sum = 0;
 
-    data.forEach(o => {
-      sum += Number(o.total);
+      data.forEach(o => {
+        const total = Number(o.total) || 0;
+        sum += total;
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${new Date(o.date).toLocaleString()}</td>
-        <td>${o.name}</td>
-        <td>${o.amount}</td>
-        <td>${Number(o.price).toFixed(2)}</td>
-        <td>${Number(o.total).toFixed(2)}</td>
-        <td><button onclick="del(${o.row})">🗑️</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${new Date(o.date).toLocaleDateString('de-DE')}</td>
+          <td>${o.name}</td>
+          <td>${o.amount}</td>
+          <td>${Number(o.price).toLocaleString('de-DE', {minimumFractionDigits: 2})} €</td>
+          <td>**${total.toLocaleString('de-DE', {minimumFractionDigits: 2})} €**</td>
+          <td><button onclick="del(${o.row})" title="Löschen">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
 
-    document.getElementById("summe").innerText =
-      "Gesamtsumme: " + sum.toFixed(2) + " €";
-  }).getOrders();
+      document.getElementById("summe").innerHTML = 
+        `<strong>Gesamtsumme: ${sum.toLocaleString('de-DE', {style: 'currency', currency: 'EUR'})}</strong>`;
+    })
+    .withFailureHandler(err => {
+      tbody.innerHTML = "<tr><td colspan='6' style='color:red'>Fehler beim Laden: " + err + "</td></tr>";
+    })
+    .getOrders();
 }
 
 function del(row) {
@@ -83,3 +90,4 @@ load();
 
 </body>
 </html>
+
