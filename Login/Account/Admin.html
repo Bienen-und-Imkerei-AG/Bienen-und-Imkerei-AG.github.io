@@ -38,7 +38,6 @@
   <div class="sum-container" id="summe">Gesamtsumme: 0,00 €</div>
 
   <script>
-    // Formatierer für Euro-Währung
     const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
     function load() {
@@ -48,7 +47,7 @@
           tbody.innerHTML = "";
           let sum = 0;
 
-          if (data.length === 0) {
+          if (!data || data.length === 0) {
             tbody.innerHTML = "<tr><td colspan='6'>Keine Bestellungen gefunden.</td></tr>";
             return;
           }
@@ -71,22 +70,15 @@
 
           document.getElementById("summe").innerText = "Gesamtsumme: " + euro.format(sum);
         })
-        .withFailureHandler(err => {
-          alert("Fehler beim Laden: " + err);
-        })
+        .withFailureHandler(err => alert("Fehler: " + err))
         .getOrders();
     }
 
     function del(row) {
-      if (!confirm("Diesen Eintrag wirklich löschen?")) return;
-      
-      // Optisches Feedback: Zeile ausgrauen
-      google.script.run
-        .withSuccessHandler(load)
-        .deleteOrder(row);
+      if (!confirm("Eintrag löschen?")) return;
+      google.script.run.withSuccessHandler(load).deleteOrder(row);
     }
 
-    // Initiales Laden
     load();
   </script>
 </body>
