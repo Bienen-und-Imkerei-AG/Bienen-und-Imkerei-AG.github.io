@@ -5,6 +5,12 @@
     "name": "Test Name",
     "rang": "Mitglied"
   },
+  {
+    "username": "Birte_Lehnen",
+    "password": "12345",
+    "name": "Test Name",
+    "rang": "Mitglied"
+  },
   {     
     "username": "Birte Lehnen",     
     "password": "1234",     
