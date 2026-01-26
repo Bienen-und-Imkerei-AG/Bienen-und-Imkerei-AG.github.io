@@ -4,82 +4,13 @@
   <meta charset="UTF-8">
   <title>Bestellübersicht.</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 40px auto; color: #333; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background-color: #f8f9fa; color: #555; text-transform: uppercase; font-size: 0.85rem; }
-    tr:hover { background-color: #fafafa; }
-    .sum-container { text-align: right; font-size: 1.2rem; margin-top: 20px; font-weight: bold; }
-    .btn-del { background: none; border: none; cursor: pointer; font-size: 1.2rem; filter: grayscale(1); transition: 0.2s; }
-    .btn-del:hover { filter: grayscale(0); transform: scale(1.1); }
-    .loading { color: #666; font-style: italic; }
+
   </style>
 </head>
 <body>
 
   <h1>📦 Bestellübersicht</h1>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Datum</th>
-        <th>Artikel</th>
-        <th>Menge</th>
-        <th>Preis (€)</th>
-        <th>Gesamt (€)</th>
-        <th>Aktion</th>
-      </tr>
-    </thead>
-    <tbody id="rows">
-      <tr><td colspan="6" class="loading">Lade Daten...</td></tr>
-    </tbody>
-  </table>
-
-  <div class="sum-container" id="summe">Gesamtsumme: 0,00 €</div>
-
-  <script>
-    const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-
-    function load() {
-      google.script.run
-        .withSuccessHandler(data => {
-          const tbody = document.getElementById("rows");
-          tbody.innerHTML = "";
-          let sum = 0;
-
-          if (!data || data.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='6'>Keine Bestellungen gefunden.</td></tr>";
-            return;
-          }
-
-          data.forEach(o => {
-            const total = Number(o.total) || 0;
-            sum += total;
-
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${new Date(o.date).toLocaleDateString('de-DE')}</td>
-              <td>${o.name}</td>
-              <td>${o.amount}</td>
-              <td>${euro.format(o.price)}</td>
-              <td><strong>${euro.format(total)}</strong></td>
-              <td><button class="btn-del" onclick="del(${o.row})">🗑️</button></td>
-            `;
-            tbody.appendChild(tr);
-          });
-
-          document.getElementById("summe").innerText = "Gesamtsumme: " + euro.format(sum);
-        })
-        .withFailureHandler(err => alert("Fehler: " + err))
-        .getOrders();
-    }
-
-    function del(row) {
-      if (!confirm("Eintrag löschen?")) return;
-      google.script.run.withSuccessHandler(load).deleteOrder(row);
-    }
-
-    load();
-  </script>
+  <a href="https://docs.google.com/spreadsheets/d/1DOQvveATzx_UAFDgix6_7omNqaKa0zb58KBWcukvfJM/edit?gid=0#gid=0">Tabelle</a>
 </body>
 </html>
+
