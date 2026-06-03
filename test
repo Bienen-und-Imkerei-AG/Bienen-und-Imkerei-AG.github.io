@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Premium Kalender App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="capacitor.js" defer></script>
+    <style>
+        /* Optimierungen für mobile Touch-Geräte (Verhindert unschöne Markierungseffekte beim Tippen) */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        input, textarea, select {
+            user-select: text;
+        }
+        /* Sichere Zone für moderne Smartphones mit Display-Ausschnitten (Notch) */
+        .safe-padding-top {
+            padding-top: calc(1.25rem + env(safe-area-inset-top));
+        }
+        .safe-padding-bottom {
+            padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased">
+
+    <div class="w-full max-w-md mx-auto bg-white min-h-screen flex flex-col justify-between shadow-none md:shadow-xl md:rounded-3xl md:min-h-[800px] md:my-6 overflow-hidden border-none md:border md:border-slate-100">
+        
+        <header class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-6 pb-5 safe-padding-top shadow-md flex justify-between items-center shrink-0">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight">Mein Kalender</h1>
+                <p class="text-indigo-100 text-xs mt-0.5" id="current-date-header">Mittwoch, 3. Juni 2026</p>
+            </div>
+            <button id="btn-request-notif" class="relative p-2.5 bg-white/10 active:scale-95 hover:bg-white/20 rounded-full transition-all text-white" title="Benachrichtigungen aktivieren">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span id="notif-badge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-indigo-600 hidden"></span>
+            </button>
+        </header>
+
+        <div id="notif-banner" class="bg-amber-50 border-b border-amber-200 px-5 py-3 text-xs text-amber-950 flex items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                <span>Bitte Benachrichtigungen erlauben, um Termine nicht zu verpassen.</span>
+            </div>
+            <button onclick="requestNotificationPermission()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition-all shrink-0 shadow-sm">
+                Aktivieren
+            </button>
+        </div>
+
+        <main class="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+            
+            <section class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prev-month" class="p-2 hover:bg-white active:scale-90 rounded-xl border border-slate-200/60 shadow-sm transition-all text-slate-600">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <h2 id="month-year-label" class="font-extrabold text-slate-800 text-base">Juni 2026</h2>
+                    <button id="next-month" class="p-2 hover:bg-white active:scale-90 rounded-xl border border-slate-200/60 shadow-sm transition-all text-slate-600">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                    <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+                </div>
+                
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                    </div>
+            </section>
+
+            <section class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <i data-lucide="calendar-range" class="w-4 h-4 text-indigo-500"></i>
+                        <span>Termine am <span id="selected-date-label">03.06.2026</span></span>
+                    </h3>
+                    <button onclick="openAddEventModal()" class="flex items-center gap-1 bg-indigo-600 active:scale-95 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md shadow-indigo-100 transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Neu</span>
+                    </button>
+                </div>
+
+                <div id="events-list" class="space-y-3">
+                    </div>
+            </section>
+        </main>
+
+        <footer class="bg-slate-50 border-t border-slate-100 py-3.5 text-center text-[10px] text-slate-400 font-medium shrink-0 safe-padding-bottom">
+            Software-Projekt • App-Entwicklung 2026
+        </footer>
+    </div>
+
+    <div id="event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden transform translate-y-10 sm:translate-y-0 sm:scale-95 transition-all duration-300">
+            <div class="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+                <h3 id="modal-title" class="font-extrabold text-slate-800 text-lg">Neuer Termin</h3>
+                <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-600 active:scale-90 p-1.5 rounded-full hover:bg-slate-100 transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="event-form" class="p-6 space-y-4">
+                <input type="hidden" id="edit-event-id">
+                
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Titel des Termins</label>
+                    <input type="text" id="event-title" required placeholder="z.B. App Präsentation" 
+                           class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Datum</label>
+                        <input type="date" id="event-date" required 
+                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Uhrzeit</label>
+                        <input type="time" id="event-time" required 
+                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Erinnerung im Voraus</span>
+                    </label>
+                    <select id="event-reminder" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none bg-white text-sm">
+                        <option value="0">Pünktlich zum Termin</option>
+                        <option value="5">5 Minuten vorher</option>
+                        <option value="15" selected>15 Minuten vorher</option>
+                        <option value="30">30 Minuten vorher</option>
+                        <option value="60">1 Stunde vorher</option>
+                        <option value="120">2 Stunden vorher</option>
+                        <option value="1440">1 Tag vorher</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Notizen</label>
+                    <textarea id="event-description" placeholder="Zusätzliche Details hinzufügen..." rows="2"
+                              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none resize-none text-sm"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeEventModal()" class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm active:scale-95">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all text-sm active:scale-95 shadow-lg shadow-indigo-100">
+                        Speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initiale Zeit-Konfiguration (Vorgabedatum aus Screenshots: Juni 2026)
+        let currentDate = new Date(2026, 5, 3); 
+        let selectedDate = new Date(2026, 5, 3);
+        let events = JSON.parse(localStorage.getItem('cal_events')) || [];
+
+        const monthNames = [
+            "Januar", "Februar", "März", "April", "Mai", "Juni", 
+            "Juli", "August", "September", "Oktober", "November", "Dezember"
+        ];
+
+        window.onload = function() {
+            lucide.createIcons();
+            setupDateHeader();
+            renderCalendar();
+            renderEvents();
+            checkNotificationStatus();
+
+            // Hintergrundprüfer für Web-Modus starten (prüft alle 15 Sekunden auf fällige Alarme)
+            setInterval(checkUpcomingRemindersWeb, 15000);
+        }
+
+        function setupDateHeader() {
+            const days = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+            const formatted = `${days[currentDate.getDay()]} ${currentDate.getDate()}. ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            document.getElementById('current-date-header').innerText = formatted;
+        }
+
+        // ========================================================
+        // ERINNERUNGEN & SYSTEM-NOTIFICATIONS (NATIV / BROWSER)
+        // ========================================================
+
+        async function checkNotificationStatus() {
+            // Falls Capacitor (nativ) vorhanden ist
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                try {
+                    const { LocalNotifications } = window.Capacitor.Plugins;
+                    const status = await LocalNotifications.checkPermissions();
+                    toggleNotificationUI(status.display === 'granted');
+                } catch (e) {
+                    toggleNotificationUI(false);
+                }
+            } else {
+                // Standard Web-Modus Statusprüfung
+                if ("Notification" in window) {
+                    toggleNotificationUI(Notification.permission === "granted");
+                } else {
+                    toggleNotificationUI(true); // Verstecke Banner, falls keine API existiert
+                }
+            }
+        }
+
+        async function requestNotificationPermission() {
+            // 1. Prüfen auf native Capacitor Plugins (für APK-Builds)
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                try {
+                    const { LocalNotifications } = window.Capacitor.Plugins;
+                    const request = await LocalNotifications.requestPermissions();
+                    if (request.display === 'granted') {
+                        toggleNotificationUI(true);
+                        await LocalNotifications.schedule({
+                            notifications: [{
+                                title: "Erfolgreich aktiviert!",
+                                body: "Erinnerungen für deine anstehenden Termine sind aktiv.",
+                                id: 1
+                            }]
+                        });
+                    }
+                } catch (e) {
+                    console.error("Native Permission Error:", e);
+                }
+            } else {
+                // 2. Standard Browser Fallback (für PC & Web2APK Apps)
+                if ("Notification" in window) {
+                    Notification.requestPermission().then(permission => {
+                        toggleNotificationUI(permission === "granted");
+                        if (permission === "granted") {
+                            new Notification("Premium Kalender", {
+                                body: "Erinnerungsfunktion erfolgreich aktiviert!"
+                            });
+                        }
+                    });
+                } else {
+                    alert("Benachrichtigungen werden von diesem Gerät/Browser nicht unterstützt.");
+                }
+            }
+        }
+
+        function toggleNotificationUI(isGranted) {
+            const banner = document.getElementById('notif-banner');
+            const badge = document.getElementById('notif-badge');
+            if (isGranted) {
+                banner.classList.add('hidden');
+                badge.classList.remove('hidden');
+            } else {
+                banner.classList.remove('hidden');
+                badge.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('btn-request-notif').addEventListener('click', requestNotificationPermission);
+
+        // Native Erinnerung im Android-OS einplanen (Wichtig für APKs!)
+        async function scheduleNativeNotification(event) {
+            const [year, month, day] = event.date.split('-').map(Number);
+            const [hours, minutes] = event.time.split(':').map(Number);
+            const eventTime = new Date(year, month - 1, day, hours, minutes);
+            const triggerTime = new Date(eventTime.getTime() - (event.reminderMinutes * 60 * 1000));
+
+            if (triggerTime <= new Date()) return; // Zeit liegt in der Vergangenheit
+
+            // Generiere einzigartige ID aus dem UUID String für das OS
+            const notificationId = Math.abs(event.id.hashCode());
+
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                try {
+                    const { LocalNotifications } = window.Capacitor.Plugins;
+                    // Eventuellen alten Timer überschreiben/löschen
+                    await LocalNotifications.cancel({ notifications: [{ id: notificationId }] });
+                    
+                    // Wecker im Android OS registrieren
+                    await LocalNotifications.schedule({
+                        notifications: [{
+                            title: event.title,
+                            body: event.reminderMinutes === 0 
+                                ? `Dein Termin beginnt jetzt!` 
+                                : `Erinnerung: Beginnt in ${event.reminderMinutes} Minuten.`,
+                            id: notificationId,
+                            schedule: { at: triggerTime }
+                        }]
+                    });
+                } catch (e) {
+                    console.error("Nativer Wecker-Fehler:", e);
+                }
+            }
+        }
+
+        async function cancelNativeNotification(eventId) {
+            const notificationId = Math.abs(eventId.hashCode());
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                try {
+                    await window.Capacitor.Plugins.LocalNotifications.cancel({ notifications: [{ id: notificationId }] });
+                } catch (e) {}
+            }
+        }
+
+        // Hintergrund-Prüfschleife für den normalen Webbrowser-Modus
+        function checkUpcomingRemindersWeb() {
+            const now = new Date();
+            events.forEach(e => {
+                if (e.notified) return;
+
+                const [year, month, day] = e.date.split('-').map(Number);
+                const [hours, minutes] = e.time.split(':').map(Number);
+                const eventTime = new Date(year, month - 1, day, hours, minutes);
+                const reminderTime = new Date(eventTime.getTime() - (e.reminderMinutes * 60 * 1000));
+
+                if (now >= reminderTime && now < eventTime) {
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification("Terminerinnerung", {
+                            body: e.reminderMinutes === 0 ? `Jetzt: ${e.title}` : `In ${e.reminderMinutes} Min: ${e.title}`
+                        });
+                    }
+                    e.notified = true;
+                }
+            });
+            localStorage.setItem('cal_events', JSON.stringify(events));
+        }
+
+        // Hilfsfunktion zur ID-Konvertierung
+        String.prototype.hashCode = function() {
+            let hash = 0;
+            for (let i = 0; i < this.length; i++) {
+                hash = ((hash << 5) - hash) + this.charCodeAt(i);
+                hash |= 0;
+            }
+            return hash;
+        };
+
+        // ========================================================
+        // KALENDER RENDERING & BERECHNUNGEN (INTERFACE)
+        // ========================================================
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            let firstDayIndex = firstDayOfMonth.getDay() - 1; 
+            if (firstDayIndex === -1) firstDayIndex = 6; // Sonntag fixen
+
+            const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+            document.getElementById('month-year-label').innerText = `${monthNames[month]} ${year}`;
+
+            // Ausgrauen der Tage des vorherigen Monats
+            for (let i = firstDayIndex; i > 0; i--) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = "h-11 flex items-center justify-center text-slate-300 text-xs font-semibold";
+                dayDiv.innerText = prevMonthLastDay - i + 1;
+                grid.appendChild(dayDiv);
+            }
+
+            // Rendern der aktuellen Monatstage
+            for (let day = 1; day <= lastDayOfMonth; day++) {
+                const dayDiv = document.createElement('div');
+                const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
+                const isToday = new Date().getDate() === day && new Date().getMonth() === month && new Date().getFullYear() === year;
+
+                const dateString = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasEvents = events.some(e => e.date === dateString);
+
+                let bgClass = "hover:bg-slate-100 text-slate-700 font-semibold";
+                if (isSelected) {
+                    bgClass = "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-100 scale-105";
+                } else if (isToday) {
+                    bgClass = "bg-indigo-100 text-indigo-700 font-bold";
+                }
+
+                dayDiv.className = `h-11 flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all relative text-xs active:scale-90 ${bgClass}`;
+                dayDiv.innerHTML = `
+                    <span>${day}</span>
+                    ${hasEvents && !isSelected ? '<span class="absolute bottom-1.5 w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>' : ''}
+                    ${hasEvents && isSelected ? '<span class="absolute bottom-1.5 w-1.5 h-1.5 bg-white rounded-full"></span>' : ''}
+                `;
+
+                dayDiv.onclick = () => selectDate(day);
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        function selectDate(day) {
+            selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            document.getElementById('selected-date-label').innerText = `${String(day).padStart(2, '0')}.${String(selectedDate.getMonth() + 1).padStart(2, '0')}.${selectedDate.getFullYear()}`;
+            renderCalendar();
+            renderEvents();
+        }
+
+        // Kalendernavigation
+        document.getElementById('prev-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        function renderEvents() {
+            const listContainer = document.getElementById('events-list');
+            listContainer.innerHTML = '';
+
+            const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+            const activeEvents = events.filter(e => e.date === dateString).sort((a,b) => a.time.localeCompare(b.time));
+
+            if (activeEvents.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-xs border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-2">
+                        <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
+                        <span>Keine Termine an diesem Tag geplant.</span>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            activeEvents.forEach(e => {
+                const item = document.createElement('div');
+                item.className = "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-start gap-3 relative overflow-hidden";
+                
+                // Dekorativer Farbbalken links
+                const stripe = document.createElement('div');
+                stripe.className = "absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-600";
+                item.appendChild(stripe);
+
+                item.innerHTML += `
+                    <div class="pl-2.5 flex-1 space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">${e.time} Uhr</span>
+                            ${e.reminderMinutes > 0 ? `
+                                <span class="inline-flex items-center gap-1 text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded-lg">
+                                    <i data-lucide="bell" class="w-2.5 h-2.5"></i> ${e.reminderMinutes} Min. davor
+                                </span>
+                            ` : ''}
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-sm">${e.title}</h4>
+                        ${e.description ? `<p class="text-xs text-slate-500">${e.description}</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="editEvent('${e.id}')" class="p-2 hover:bg-slate-50 text-slate-500 active:scale-90 rounded-xl transition-all">
+                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="deleteEvent('${e.id}')" class="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 active:scale-90 rounded-xl transition-all">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        // ========================================================
+        // TERMINE SPEICHERN / MODAL CONTROL (CRUD)
+        // ========================================================
+
+        function openAddEventModal() {
+            document.getElementById('modal-title').innerText = "Neuer Termin";
+            document.getElementById('edit-event-id').value = "";
+            document.getElementById('event-form').reset();
+            
+            const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+            document.getElementById('event-date').value = dateString;
+            
+            const modal = document.getElementById('event-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('translate-y-10', 'sm:scale-95');
+        }
+
+        function closeEventModal() {
+            const modal = document.getElementById('event-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.add('translate-y-10', 'sm:scale-95');
+        }
+
+        document.getElementById('event-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-event-id').value || crypto.randomUUID();
+            const title = document.getElementById('event-title').value;
+            const date = document.getElementById('event-date').value;
+            const time = document.getElementById('event-time').value;
+            const reminderMinutes = parseInt(document.getElementById('event-reminder').value);
+            const description = document.getElementById('event-description').value;
+
+            const newEvent = { id, title, date, time, reminderMinutes, description, notified: false };
+
+            const index = events.findIndex(ev => ev.id === id);
+            if (index > -1) {
+                events[index] = newEvent;
+            } else {
+                events.push(newEvent);
+            }
+
+            localStorage.setItem('cal_events', JSON.stringify(events));
+
+            // Nativ im Handy-OS einplanen falls im APK-Wrapper ausgeführt
+            await scheduleNativeNotification(newEvent);
+
+            closeEventModal();
+            renderCalendar();
+            renderEvents();
+        });
+
+        window.editEvent = function(id) {
+            const event = events.find(e => e.id === id);
+            if (!event) return;
+
+            document.getElementById('modal-title').innerText = "Termin bearbeiten";
+            document.getElementById('edit-event-id').value = event.id;
+            document.getElementById('event-title').value = event.title;
+            document.getElementById('event-date').value = event.date;
+            document.getElementById('event-time').value = event.time;
+            document.getElementById('event-reminder').value = event.reminderMinutes;
+            document.getElementById('event-description').value = event.description || "";
+
+            const modal = document.getElementById('event-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('translate-y-10', 'sm:scale-95');
+        };
+
+        window.deleteEvent = async function(id) {
+            events = events.filter(e => e.id !== id);
+            localStorage.setItem('cal_events', JSON.stringify(events));
+            
+            // Abbrechen der OS-Meldung falls vorhanden
+            await cancelNativeNotification(id);
+
+            renderCalendar();
+            renderEvents();
+        };
+    </script>
+</body>
+</html>
